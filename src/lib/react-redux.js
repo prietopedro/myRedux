@@ -13,17 +13,34 @@ export function connect(mapStateToProps, mapDispatchToProps) {
       static contextType = StoreContext;
 
       componentDidMount() {
+        if (!mapStateToProps) return;
         this.unsubscribe = this.context.subscribe(() => this.forceUpdate());
       }
       componentWillUnmount() {
-        this.unsubscribe();
+        if (this.unsubscribe) this.unsubscribe();
       }
       render() {
+        let stateProps = {};
+        let dispatchProps = {};
+
+        // Do not want to invoke if it's null
+        if (mapStateToProps)
+          stateProps = {
+            ...mapStateToProps(this.context.getState(), this.props),
+          };
+
+        // Do not want to invoke if its null, or was passed as an object
+        if (typeof mapDispatchToProps === "function")
+          dispatchProps = {
+            ...mapDispatchToProps(this.context.dispatch, this.props),
+          };
+        else if (mapDispatchToProps) dispatchProps = { ...dispatchProps };
+
         return (
           <WrappedComponent
             {...this.props}
-            {...mapStateToProps(this.context.getState())}
-            {...mapDispatchToProps(this.context.dispatch)}
+            {...stateProps}
+            {...dispatchProps}
           />
         );
       }
